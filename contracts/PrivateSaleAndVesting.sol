@@ -73,7 +73,9 @@ contract PrivateSaleAndVesting is Context, Ownable {
    */
   function extendSale(uint256 _daysToExtendSaleBy) external onlyFoundationAddress {
     require(block.timestamp >= _startTime, 'VeFiTokenVest: Sale must be started before the end date can be extended');
-    _endTime = _endTime + (_daysToExtendSaleBy * 1 days);
+
+    if (_endTime < block.timestamp) _endTime = block.timestamp + (_daysToExtendSaleBy * 1 days);
+    else _endTime = _endTime + (_daysToExtendSaleBy * 1 days);
 
     emit TokenSaleExtended(_daysToExtendSaleBy);
   }
