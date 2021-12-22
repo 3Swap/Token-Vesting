@@ -33,7 +33,7 @@ contract('SeedSaleAndVesting', accounts => {
       seedSale.startSale(daysBeforeStart, saleEndTime, withdrawalTime, {
         from: beneficiary1
       }),
-      'VeFiTokenVest: Only foundation address can call this function'
+      'token vest: only foundation address can call this function'
     );
   });
 
@@ -51,7 +51,7 @@ contract('SeedSaleAndVesting', accounts => {
         from: beneficiary3,
         value: web3.utils.toWei('0.000002')
       }),
-      'VeFiTokenVest: Sale not started yet'
+      'token vest: sale not started yet'
     );
   });
 
@@ -68,7 +68,7 @@ contract('SeedSaleAndVesting', accounts => {
   it('should not allow withdrawal before 2 month cliff', async () => {
     await expectRevert(
       seedSale.withdraw({ from: beneficiary3 }),
-      'VeFiTokenVest: Token withdrawal before 2 month cliff'
+      'token vest: token withdrawal before 2 month cliff'
     );
   });
 
@@ -85,13 +85,13 @@ contract('SeedSaleAndVesting', accounts => {
   });
 
   it('should throw error if address tries to withdraw before withdrawal time', async () => {
-    await expectRevert(seedSale.withdraw({ from: beneficiary3 }), 'VeFiTokenVest: It is not time for withdrawal');
+    await expectRevert(seedSale.withdraw({ from: beneficiary3 }), 'token vest: it is not time for withdrawal');
   });
 
   it('should only allow foundation address to withdraw BNB', async () => {
     await expectRevert(
       seedSale.withdrawBNB({ from: beneficiary3 }),
-      'VeFiTokenVest: Only foundation address can call this function'
+      'token vest: only foundation address can call this function'
     );
   });
 
@@ -105,7 +105,7 @@ contract('SeedSaleAndVesting', accounts => {
   it('should allow only foundation address to withdraw left-over tokens', async () => {
     await expectRevert(
       seedSale.withdrawLeftOverTokens({ from: beneficiary3 }),
-      'VeFiTokenVest: Only foundation address can call this function'
+      'token vest: only foundation address can call this function'
     );
   });
 
