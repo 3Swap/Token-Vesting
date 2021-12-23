@@ -1,8 +1,8 @@
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/utils/Context.sol';
 
 contract PublicSaleAndVesting is Context, Ownable {
   struct VestingDetail {
@@ -24,20 +24,13 @@ contract PublicSaleAndVesting is Context, Ownable {
   mapping(address => VestingDetail) _vestingDetails;
 
   modifier onlyFoundationAddress() {
-    require(
-      _msgSender() == _foundationAddress,
-      "VeFiTokenVest: Only foundation address can call this function"
-    );
+    require(_msgSender() == _foundationAddress, 'token vest: only foundation address can call this function');
     _;
   }
 
   event TokenSaleStarted(uint256 _startTime);
   event TokenSaleExtended(uint256 _extension);
-  event TokensBoughtAndVested(
-    address _vestedBy,
-    uint256 _vested,
-    uint256 _totalVesting
-  );
+  event TokensBoughtAndVested(address _vestedBy, uint256 _vested, uint256 _totalVesting);
   event TokensWithdrawn(uint256 _amount, uint256 _inVesting);
   event RateChanged(uint256 _newRate);
 
@@ -71,15 +64,11 @@ contract PublicSaleAndVesting is Context, Ownable {
   /** @dev Extend the token sale
    *  @param _daysToExtendSaleBy The number of days to extend the end date by
    */
-  function extendSale(uint256 _daysToExtendSaleBy)
-    external
-    onlyFoundationAddress
-  {
-    require(
-      block.timestamp >= _startTime,
-      "VeFiTokenVest: Sale must be started before the end date can be extended"
-    );
-    _endTime = _endTime + (_daysToExtendSaleBy * 1 days);
+  function extendSale(uint256 _daysToExtendSaleBy) external onlyFoundationAddress {
+    require(block.timestamp >= _startTime, 'token vest: sale must be started before the end date can be extended');
+
+    if (_endTime < block.timestamp) _endTime = block.timestamp + (_daysToExtendSaleBy * 1 days);
+    else _endTime = _endTime + (_daysToExtendSaleBy * 1 days);
 
     emit TokenSaleExtended(_daysToExtendSaleBy);
   }
@@ -89,48 +78,36 @@ contract PublicSaleAndVesting is Context, Ownable {
   function buyAndVest() public payable {
     uint256 _currentTime = block.timestamp;
 
-    require(_currentTime >= _startTime, "VeFiTokenVest: Sale not started yet");
-    require(_endTime > _currentTime, "VeFiTokenVest: Sale has ended");
+    require(_currentTime >= _startTime, 'token vest: sale not started yet');
+    require(_endTime > _currentTime, 'token vest: sale has ended');
 
     address _vestor = _msgSender();
     uint256 _vestable = (msg.value * 10**18) / _rate;
 
     require(
       (_totalVested + _vestable) <= _paymentToken.balanceOf(address(this)),
-      "VeFiTokenVest: Cannot buy and vest as allocation is not enough"
+      'token vest: cannot buy and vest as allocation is not enough'
     );
 
     VestingDetail storage vestingDetail = _vestingDetails[_vestor];
-    vestingDetail._withdrawalAmount =
-      vestingDetail._withdrawalAmount +
-      _vestable;
+    vestingDetail._withdrawalAmount = vestingDetail._withdrawalAmount + _vestable;
     vestingDetail._withdrawalTime = block.timestamp + _daysBeforeWithdrawal;
     vestingDetail._lockDuration = block.timestamp + 365 days;
     _totalVested = _totalVested + _vestable;
     _tokensBought = _tokensBought + _vestable;
 
-    emit TokensBoughtAndVested(
-      _vestor,
-      vestingDetail._withdrawalAmount,
-      _totalVested
-    );
+    emit TokensBoughtAndVested(_vestor, vestingDetail._withdrawalAmount, _totalVested);
   }
 
   /** @dev Withdrawal function. Can only be called after vesting period has elapsed
    */
   function withdraw() external {
     uint256 _cliff = _endTime + (60 * 1 days);
-    require(
-      block.timestamp > _cliff,
-      "VeFiTokenVest: Token withdrawal before 2 month cliff"
-    );
+    require(block.timestamp > _cliff, 'token vest: token withdrawal before 2 month cliff');
     VestingDetail storage vestingDetail = _vestingDetails[_msgSender()];
     uint256 _withdrawable;
 
-    require(
-      vestingDetail._withdrawalTime != 0,
-      "VeFiTokenVest: Withdrawal not possible"
-    );
+    require(vestingDetail._withdrawalTime != 0, 'token vest: withdrawal not possible');
 
     if (block.timestamp >= vestingDetail._lockDuration) {
       _withdrawable = vestingDetail._withdrawalAmount;
@@ -138,29 +115,19 @@ contract PublicSaleAndVesting is Context, Ownable {
       _withdrawable = (vestingDetail._withdrawalAmount * 5) / 100;
     }
 
-    require(
-      (block.timestamp >= vestingDetail._withdrawalTime),
-      "VeFiTokenVest: It is not time for withdrawal"
-    );
+    require((block.timestamp >= vestingDetail._withdrawalTime), 'token vest: it is not time for withdrawal');
     require(
       _paymentToken.balanceOf(address(this)) >= _withdrawable,
-      "VeFiTokenVest: Not enough tokens to sell. Please reach out to the foundation concerning this"
+      'token vest: not enough tokens to sell. please reach out to the foundation concerning this'
     );
-    require(
-      _paymentToken.transfer(_msgSender(), _withdrawable),
-      "VeFiTokenVest: Could not transfer tokens"
-    );
+    require(_paymentToken.transfer(_msgSender(), _withdrawable), 'token vest: could not transfer tokens');
 
-    vestingDetail._withdrawalAmount =
-      vestingDetail._withdrawalAmount -
-      _withdrawable;
-    vestingDetail._withdrawalTime = block.timestamp <
-      vestingDetail._lockDuration
+    vestingDetail._withdrawalAmount = vestingDetail._withdrawalAmount - _withdrawable;
+    vestingDetail._withdrawalTime = block.timestamp < vestingDetail._lockDuration
       ? block.timestamp + _daysBeforeWithdrawal
       : 0;
 
-    if (block.timestamp >= vestingDetail._lockDuration)
-      vestingDetail._lockDuration = 0;
+    if (block.timestamp >= vestingDetail._lockDuration) vestingDetail._lockDuration = 0;
 
     _totalVested = _totalVested - _withdrawable;
 
@@ -177,20 +144,11 @@ contract PublicSaleAndVesting is Context, Ownable {
   /** @dev Function to withdraw left-over tokens. Can only be called by the foundation and after the sale has ended.
    */
   function withdrawLeftOverTokens() external onlyFoundationAddress {
+    require(block.timestamp >= _endTime, 'token vest: left over tokens can only be withdrawn after sale');
+    require(_paymentToken.balanceOf(address(this)) > 0, 'token vest: no left over tokens to withdraw');
     require(
-      block.timestamp >= _endTime,
-      "VeFiTokenVest: Left over tokens can only be withdrawn after sale"
-    );
-    require(
-      _paymentToken.balanceOf(address(this)) > 0,
-      "VeFiTokenVest: No left over tokens to withdraw"
-    );
-    require(
-      _paymentToken.transfer(
-        _foundationAddress,
-        _paymentToken.balanceOf(address(this))
-      ),
-      "VeFiTokenVest: Could not withdraw left over tokens"
+      _paymentToken.transfer(_foundationAddress, _paymentToken.balanceOf(address(this))),
+      'token vest: could not withdraw left over tokens'
     );
   }
 
@@ -198,7 +156,7 @@ contract PublicSaleAndVesting is Context, Ownable {
    *  @param rate_ The rate to be set
    */
   function setRate(uint256 rate_) external onlyFoundationAddress {
-    require(rate_ > 0, "VeFiTokenVest: Rate must be greater than 0");
+    require(rate_ > 0, 'token vest: rate must be greater than 0');
     _rate = rate_;
 
     emit RateChanged(_rate);
@@ -207,14 +165,8 @@ contract PublicSaleAndVesting is Context, Ownable {
   /** @dev Set foundation address. Can only be called by contract owner
    *  @param foundationAddress_ address to set
    */
-  function setFoundationAddress(address payable foundationAddress_)
-    external
-    onlyOwner
-  {
-    require(
-      foundationAddress_ != address(0),
-      "VeFiTokenVest: Set zero address as foundation address"
-    );
+  function setFoundationAddress(address payable foundationAddress_) external onlyOwner {
+    require(foundationAddress_ != address(0), 'token vest: set zero address as foundation address');
     _foundationAddress = foundationAddress_;
   }
 
@@ -247,11 +199,7 @@ contract PublicSaleAndVesting is Context, Ownable {
   /** @dev Get vesting detail of address
    *  @param _vestor Address for which to view vesting detail
    */
-  function getVestingDetail(address _vestor)
-    external
-    view
-    returns (VestingDetail memory _detail)
-  {
+  function getVestingDetail(address _vestor) external view returns (VestingDetail memory _detail) {
     return _vestingDetails[_vestor];
   }
 
