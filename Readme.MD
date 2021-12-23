@@ -1,7 +1,7 @@
-VeFi Token Sale & Vesting
+3Swap Token Sale & Vesting
 ===============================
 
-**GitHub Action Status:** ![VeFi Workflow](https://github.com/VeFi-Network/Token-Vesting/actions/workflows/contracts-test.yml/badge.svg)
+**GitHub Action Status:** ![VeFi Workflow](https://github.com/3Swap/Token-Vesting/actions/workflows/contracts-test.yml/badge.svg)
 
 
 ##### Running tests
