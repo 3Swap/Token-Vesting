@@ -66,10 +66,7 @@ contract('SeedSaleAndVesting', accounts => {
   });
 
   it('should not allow withdrawal before 2 month cliff', async () => {
-    await expectRevert(
-      seedSale.withdraw({ from: beneficiary3 }),
-      'token vest: token withdrawal before 2 month cliff'
-    );
+    await expectRevert(seedSale.withdraw({ from: beneficiary3 }), 'token vest: token withdrawal before 2 month cliff');
   });
 
   it('should withdraw 5%', async () => {
@@ -143,7 +140,7 @@ contract('PrivateSaleAndVesting', accounts => {
       privateSale.startSale(daysBeforeStart, saleEndTime, withdrawalTime, {
         from: beneficiary1
       }),
-      'VeFiTokenVest: Only foundation address can call this function'
+      'token vest: only foundation address can call this function'
     );
   });
 
@@ -162,7 +159,7 @@ contract('PrivateSaleAndVesting', accounts => {
         from: beneficiary3,
         value: web3.utils.toWei('0.000002')
       }),
-      'VeFiTokenVest: Only whitelisted addresses can call this function'
+      'token vest: only whitelisted addresses can call this function'
     );
   });
 
