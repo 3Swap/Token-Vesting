@@ -85,14 +85,14 @@ contract PrivateSaleAndVesting is Context, Ownable {
   function buyAndVest() public payable onlyWhiteListed {
     uint256 _currentTime = block.timestamp;
 
-    require(_currentTime >= _startTime, 'token vest: sale not started yet');
+    require(_startTime != 0 && _currentTime >= _startTime, 'token vest: sale not started yet');
     require(_endTime > _currentTime, 'token vest: sale has ended');
 
     address _vestor = _msgSender();
     uint256 _vestable = (msg.value * 10**18) / _rate;
 
     require(
-      (_totalVested + _vestable) <= _paymentToken.balanceOf(address(this)),
+      _totalVested + _vestable <= getAvailableTokens(),
       'token vest: cannot buy and vest as allocation is not enough'
     );
 
@@ -124,7 +124,7 @@ contract PrivateSaleAndVesting is Context, Ownable {
 
     require((block.timestamp >= vestingDetail._withdrawalTime), 'token vest: it is not time for withdrawal');
     require(
-      _paymentToken.balanceOf(address(this)) >= _withdrawable,
+      getAvailableTokens() >= _withdrawable,
       'token vest: not enough tokens to sell. please reach out to the foundation concerning this'
     );
     require(_paymentToken.transfer(_msgSender(), _withdrawable), 'token vest: could not transfer tokens');
@@ -232,6 +232,12 @@ contract PrivateSaleAndVesting is Context, Ownable {
    */
   function getTokensBought() external view returns (uint256) {
     return _tokensBought;
+  }
+
+  /** @dev Returns the amount of tokens available
+   */
+  function getAvailableTokens() public view returns (uint256) {
+    return _paymentToken.balanceOf(address(this));
   }
 
   receive() external payable {
