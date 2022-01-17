@@ -87,6 +87,7 @@ contract PrivateSaleAndVesting is Context, Ownable {
 
     require(_startTime != 0 && _currentTime >= _startTime, 'token vest: sale not started yet');
     require(_endTime > _currentTime, 'token vest: sale has ended');
+    require(msg.value >= 2 ether, 'token vest: value is less than 2 ether');
 
     address _vestor = _msgSender();
     uint256 _vestable = (msg.value * 10**18) / _rate;
