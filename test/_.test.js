@@ -1,13 +1,13 @@
 const { expectRevert, time } = require('@openzeppelin/test-helpers');
 const BigNumber = web3.BigNumber;
 const MockToken = artifacts.require('MockToken');
-const SeedSaleAndVesting = artifacts.require('SeedSaleAndVesting');
+const SeedSaleAndVesting = artifacts.require('InitialPublicSaleAndVesting');
 const PrivateSaleAndVesting = artifacts.require('PrivateSaleAndVesting');
 const BN = require('bignumber.js');
 
 require('chai').use(require('chai-as-promised')).use(require('chai-bignumber')(BigNumber)).should();
 
-contract('SeedSaleAndVesting', accounts => {
+contract('InitialPublicSaleAndVesting', accounts => {
   let seedSale;
   let token;
   const daysBeforeStart = 21;
@@ -18,14 +18,14 @@ contract('SeedSaleAndVesting', accounts => {
 
   before(async () => {
     await time.advanceBlock();
-    token = await MockToken.new('MockToken', 'Mktk', web3.utils.toWei('1000000'));
+    token = await MockToken.new('MockToken', 'Mktk', web3.utils.toWei('100000000'));
     seedSale = await SeedSaleAndVesting.new(token.address, web3.utils.toWei('0.0002'), beneficiary2);
-    await token.transfer(seedSale.address, web3.utils.toWei('1000000'));
+    await token.transfer(seedSale.address, web3.utils.toWei('100000000'));
   });
 
   it('should have transferred 1000000 tokens to seed sale contract', async () => {
     const balance = await token.balanceOf(seedSale.address);
-    assert.equal(balance, web3.utils.toWei('1000000'));
+    assert.equal(balance, web3.utils.toWei('100000000'));
   });
 
   it('should not permit random address to start sale', async () => {
@@ -59,10 +59,10 @@ contract('SeedSaleAndVesting', accounts => {
     await time.increase(time.duration.days(21));
     await seedSale.buyAndVest({
       from: beneficiary3,
-      value: web3.utils.toWei('0.000002')
+      value: web3.utils.toWei('2')
     });
     const vestingDetail = await seedSale.getVestingDetail(beneficiary3);
-    vestingDetail._withdrawalAmount.toString().should.be.bignumber.equal(1e16);
+    vestingDetail._withdrawalAmount.toString().should.be.bignumber.equal(1e22);
   });
 
   it('should not allow withdrawal before 2 month cliff', async () => {
@@ -96,7 +96,7 @@ contract('SeedSaleAndVesting', accounts => {
     const currentBalance = await web3.eth.getBalance(beneficiary2);
     await seedSale.withdrawBNB({ from: beneficiary2 });
     const newBalance = await web3.eth.getBalance(beneficiary2);
-    assert.isTrue(new BN.BigNumber(newBalance).lt(new BN.BigNumber(currentBalance)));
+    assert.isTrue(new BN.BigNumber(newBalance).gt(new BN.BigNumber(currentBalance)));
   });
 
   it('should allow only foundation address to withdraw left-over tokens', async () => {
@@ -125,14 +125,14 @@ contract('PrivateSaleAndVesting', accounts => {
 
   before(async () => {
     await time.advanceBlock();
-    token = await MockToken.new('MockToken', 'Mktk', web3.utils.toWei('1000000'));
+    token = await MockToken.new('MockToken', 'Mktk', web3.utils.toWei('100000000'));
     privateSale = await PrivateSaleAndVesting.new(token.address, web3.utils.toWei('0.0002'), beneficiary2);
-    await token.transfer(privateSale.address, web3.utils.toWei('1000000'));
+    await token.transfer(privateSale.address, web3.utils.toWei('100000000'));
   });
 
   it('should have transferred 1000000 tokens to private sale contract', async () => {
     const balance = await token.balanceOf(privateSale.address);
-    assert.equal(balance, web3.utils.toWei('1000000'));
+    assert.equal(balance, web3.utils.toWei('100000000'));
   });
 
   it('should not permit random address to start sale', async () => {
@@ -157,7 +157,7 @@ contract('PrivateSaleAndVesting', accounts => {
     await expectRevert(
       privateSale.buyAndVest({
         from: beneficiary3,
-        value: web3.utils.toWei('0.000002')
+        value: web3.utils.toWei('2')
       }),
       'token vest: only whitelisted addresses can call this function'
     );
@@ -169,12 +169,19 @@ contract('PrivateSaleAndVesting', accounts => {
     });
   });
 
+  it('should not permit deposit of less than 2 ether', async () => {
+    await expectRevert(
+      privateSale.buyAndVest({ from: beneficiary3, value: web3.utils.toWei('0.0002') }),
+      'token vest: value is less than 2 ether'
+    );
+  });
+
   it('should allow whitelisted address to buy and vest', async () => {
     await privateSale.buyAndVest({
       from: beneficiary3,
-      value: web3.utils.toWei('0.000002')
+      value: web3.utils.toWei('2')
     });
     const vestingDetail = await privateSale.getVestingDetail(beneficiary3);
-    vestingDetail._withdrawalAmount.toString().should.be.bignumber.equal(1e16);
+    vestingDetail._withdrawalAmount.toString().should.be.bignumber.equal(1e22);
   });
 });

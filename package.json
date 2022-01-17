@@ -10,7 +10,7 @@
     "test": "truffle test --network development",
     "format": "prettier --write **/**/*.{js,json,sol}",
     "deploy:bsc": "truffle migrate --network bsc_mainnet",
-    "flatten": "truffle-flattener contracts/SeedSaleAndVesting.sol > SeedSaleAndVestingFlat.sol && truffle-flattener contracts/PrivateSaleAndVesting.sol > PrivateSaleAndVestingFlat.sol"
+    "flatten": "truffle-flattener contracts/InitialPublicSaleAndVesting.sol > InitialPublicSaleAndVestingFlat.sol && truffle-flattener contracts/PrivateSaleAndVesting.sol > PrivateSaleAndVestingFlat.sol"
   },
   "repository": {
     "type": "git",
