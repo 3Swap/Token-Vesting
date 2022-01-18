@@ -110,8 +110,6 @@ contract PrivateSaleAndVesting is Context, Ownable {
   /** @dev Withdrawal function. Can only be called after vesting period has elapsed
    */
   function withdraw() external {
-    uint256 _cliff = _endTime + (60 * 1 days);
-    require(block.timestamp > _cliff, 'token vest: token withdrawal before 2 month cliff');
     VestingDetail storage vestingDetail = _vestingDetails[_msgSender()];
     uint256 _withdrawable;
 
@@ -120,7 +118,7 @@ contract PrivateSaleAndVesting is Context, Ownable {
     if (block.timestamp >= vestingDetail._lockDuration) {
       _withdrawable = vestingDetail._withdrawalAmount;
     } else {
-      _withdrawable = (vestingDetail._withdrawalAmount * 6) / 100;
+      _withdrawable = (vestingDetail._withdrawalAmount * 15) / 100;
     }
 
     require((block.timestamp >= vestingDetail._withdrawalTime), 'token vest: it is not time for withdrawal');

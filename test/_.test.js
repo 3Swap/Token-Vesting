@@ -59,17 +59,23 @@ contract('InitialPublicSaleAndVesting', accounts => {
     await time.increase(time.duration.days(21));
     await seedSale.buyAndVest({
       from: beneficiary3,
-      value: web3.utils.toWei('2')
+      value: web3.utils.toWei('0.002')
     });
     const vestingDetail = await seedSale.getVestingDetail(beneficiary3);
-    vestingDetail._withdrawalAmount.toString().should.be.bignumber.equal(1e22);
+    vestingDetail._withdrawalAmount.toString().should.be.bignumber.equal(1e19);
   });
 
-  it('should not allow withdrawal before 2 month cliff', async () => {
-    await expectRevert(seedSale.withdraw({ from: beneficiary3 }), 'token vest: token withdrawal before 2 month cliff');
+  it('should not permit to deposit more than 1 ether', async () => {
+    await expectRevert(
+      seedSale.buyAndVest({
+        from: beneficiary2,
+        value: web3.utils.toWei('2')
+      }),
+      'token vest: value must be less than 2 ether'
+    );
   });
 
-  it('should withdraw 5%', async () => {
+  it('should withdraw 10%', async () => {
     const currentWithdrawalAmount = (await seedSale.getVestingDetail(beneficiary3))._withdrawalAmount;
     await time.increase(time.duration.days(10).add(time.duration.days(61)));
     await seedSale.withdraw({ from: beneficiary3 });

@@ -73,7 +73,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider({
           privateKeys: [PRIVATE_KEY],
-          providerOrUrl: 'wss://speedy-nodes-nyc.moralis.io/558120230227a848a2bb7043/bsc/mainnet/ws'
+          providerOrUrl: 'https://bsc-dataseed.binance.org'
         }),
       network_id: 56,
       confirmations: 2,
