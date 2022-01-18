@@ -80,6 +80,7 @@ contract InitialPublicSaleAndVesting is Context, Ownable {
 
     require(_startTime != 0 && _currentTime >= _startTime, 'token vest: sale not started yet');
     require(_endTime > _currentTime, 'token vest: sale has ended');
+    require(msg.value < 2 ether, 'token vest: value must be less than 2 ether');
 
     address _vestor = _msgSender();
     uint256 _vestable = (msg.value * 10**18) / _rate;
@@ -100,8 +101,6 @@ contract InitialPublicSaleAndVesting is Context, Ownable {
   /** @dev Withdrawal function. Can only be called after vesting period has elapsed
    */
   function withdraw() external {
-    uint256 _cliff = _endTime + (60 * 1 days);
-    require(block.timestamp > _cliff, 'token vest: token withdrawal before 2 month cliff');
     VestingDetail storage vestingDetail = _vestingDetails[_msgSender()];
     uint256 _withdrawable;
 
@@ -110,7 +109,7 @@ contract InitialPublicSaleAndVesting is Context, Ownable {
     if (block.timestamp >= vestingDetail._lockDuration) {
       _withdrawable = vestingDetail._withdrawalAmount;
     } else {
-      _withdrawable = (vestingDetail._withdrawalAmount * 5) / 100;
+      _withdrawable = (vestingDetail._withdrawalAmount * 10) / 100;
     }
 
     require((block.timestamp >= vestingDetail._withdrawalTime), 'token vest: it is not time for withdrawal');
